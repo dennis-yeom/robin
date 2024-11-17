@@ -12,3 +12,9 @@ Possble database to use?
 
 # Laravel
 PHP-based framework. Serve a web interface for managing and viewing the processed data. Provide API endpoints for external applications to interact with the ETL pipeline.
+
+# Cobra
+For CLI
+
+# Viper
+For environment variables
