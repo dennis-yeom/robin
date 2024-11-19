@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -49,6 +50,35 @@ var (
 
 		},
 	}
+
+	// GetMsg command
+	GetMsgCmd = &cobra.Command{
+		Use:   "getmsg",
+		Short: "receives a message from the SQS queue",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Create a handler instance with sqs
+			h, err := handler.New(
+				handler.WithSQS(viper.GetString("sqs.url")),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to initialize handler: %w", err)
+			}
+
+			// call  ReceiveMessage function
+			success, err := h.ReceiveMessage(context.Background(), 30, 10, 1) // 30s visibility, 10s wait time, 1 message
+			if err != nil {
+				return fmt.Errorf("error while receiving message: %w", err)
+			}
+
+			if success {
+				fmt.Println("Message successfully received and processed.")
+			} else {
+				fmt.Println("No messages found in the queue.")
+			}
+
+			return nil
+		},
+	}
 )
 
 func init() {
@@ -64,6 +94,7 @@ func init() {
 	// add commands to root cmd
 	RootCmd.AddCommand(HandlerCmd)
 	RootCmd.AddCommand(SQSClientCmd)
+	RootCmd.AddCommand(GetMsgCmd)
 
 }
 

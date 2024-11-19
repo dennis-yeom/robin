@@ -44,3 +44,25 @@ func WithSQS(sqsUrl string) HandlerOptions {
 		return nil
 	}
 }
+
+// ReceiveMessage retrieves and processes messages from SQS through the handler
+func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, waitTimeSeconds int32, maxMessages int32) (bool, error) {
+	if h.sqs == nil {
+		return false, fmt.Errorf("SQS client is not initialized")
+	}
+
+	// Call the SQS client's ReceiveMessage function
+	success, err := h.sqs.ReceiveMessage(ctx, visibilityTimeout, waitTimeSeconds, maxMessages)
+
+	if err != nil {
+		return false, fmt.Errorf("handler failed to receive message: %w", err)
+	}
+
+	if success {
+		fmt.Println("Message successfully received and processed via handler.")
+	} else {
+		fmt.Println("No messages received via handler.")
+	}
+
+	return success, nil
+}
