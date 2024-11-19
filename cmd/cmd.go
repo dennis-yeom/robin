@@ -51,6 +51,28 @@ var (
 		},
 	}
 
+	// s3 command
+	S3Cmd = &cobra.Command{
+		Use:   "s3",
+		Short: "instantiates an S3 client",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get the bucket and endpoint from the configuration file
+			bucket := viper.GetString("s3.bucket")
+			endpoint := viper.GetString("s3.endpoint")
+
+			// Create a handler with an S3 client
+			_, err := handler.New(
+				handler.WithS3(bucket, endpoint),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to initialize S3 client: %w", err)
+			}
+
+			//fmt.Println("S3 client successfully created!")
+			return nil
+		},
+	}
+
 	// GetMsg command
 	GetMsgCmd = &cobra.Command{
 		Use:   "getmsg",
@@ -95,6 +117,7 @@ func init() {
 	RootCmd.AddCommand(HandlerCmd)
 	RootCmd.AddCommand(SQSClientCmd)
 	RootCmd.AddCommand(GetMsgCmd)
+	RootCmd.AddCommand(S3Cmd)
 
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dennis-yeom/robin/internal/aws/s3"
 	"github.com/dennis-yeom/robin/internal/aws/sqs"
 )
 
@@ -11,6 +12,7 @@ type Handler struct {
 	// handler is struct with 3 pointers to clients.
 	// this is how we bring together all the data.
 	sqs *sqs.SQSClient
+	s3  *s3.S3Client
 }
 
 type HandlerOptions func(*Handler) error
@@ -41,6 +43,25 @@ func WithSQS(sqsUrl string) HandlerOptions {
 		}
 		fmt.Println("SQS client successfully initialized and assigned.")
 		h.sqs = sqsClient
+		return nil
+	}
+}
+
+// WithS3 sets up the S3 client for the Demo struct
+func WithS3(bucket string, endpoint string) HandlerOptions {
+	return func(h *Handler) error {
+		// Retrieve the endpoint from configuration
+		if endpoint == "" {
+			return fmt.Errorf("endpoint must be set in the config file")
+		}
+
+		// Initialize the S3 client with the bucket and endpoint
+		s3Client, err := s3.NewS3Client(context.TODO(), bucket, endpoint)
+		if err != nil {
+			return fmt.Errorf("failed to initialize S3 client: %v", err)
+		}
+
+		h.s3 = s3Client
 		return nil
 	}
 }
