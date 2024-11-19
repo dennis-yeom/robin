@@ -101,6 +101,40 @@ var (
 			return nil
 		},
 	}
+
+	// lists all files and their versions
+	ListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "lists contents and versions in buckets",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get the bucket name and endpoint from configuration
+			bucket := viper.GetString("s3.bucket")
+			endpoint := viper.GetString("s3.endpoint")
+
+			// check if config filled
+			if bucket == "" {
+				return fmt.Errorf("bucket must be set in the config file")
+			}
+			if endpoint == "" {
+				return fmt.Errorf("endpoint must be set in the config file")
+			}
+
+			// configure with bucket and endpoint
+			h, err := handler.New(
+				handler.WithS3(bucket, endpoint),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to configure handler with S3 client: %v", err)
+			}
+
+			// list and err check
+			if err := h.ListObjectVersions(); err != nil {
+				return fmt.Errorf("failed to list object versions: %v", err)
+			}
+
+			return nil
+		},
+	}
 )
 
 func init() {
@@ -118,6 +152,7 @@ func init() {
 	RootCmd.AddCommand(SQSClientCmd)
 	RootCmd.AddCommand(GetMsgCmd)
 	RootCmd.AddCommand(S3Cmd)
+	RootCmd.AddCommand(ListCmd)
 
 }
 

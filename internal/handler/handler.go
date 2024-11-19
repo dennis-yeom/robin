@@ -87,3 +87,20 @@ func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, w
 
 	return success, nil
 }
+
+// ListObjectVersions prints all objects in the S3 bucket with their version IDs
+func (h *Handler) ListObjectVersions() error {
+	// Retrieve all objects with their version IDs
+	objects, err := h.s3.GetAllObjectVersions(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to list object versions: %w", err)
+	}
+
+	// Print each object's key and version ID
+	fmt.Println("Objects in bucket with their version IDs:")
+	for _, obj := range objects {
+		fmt.Printf(" - Key: %s, Version ID: %s\n", obj.Key, obj.VersionID)
+	}
+
+	return nil
+}
