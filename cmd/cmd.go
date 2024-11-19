@@ -32,6 +32,23 @@ var (
 			return nil
 		},
 	}
+
+	SQSClientCmd = &cobra.Command{
+		Use:   "sqs",
+		Short: "instantiates sqs client",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := handler.New(
+				handler.WithSQS(viper.GetString("sqs.url")),
+			)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
+
+		},
+	}
 )
 
 func init() {
@@ -46,6 +63,7 @@ func init() {
 
 	// add commands to root cmd
 	RootCmd.AddCommand(HandlerCmd)
+	RootCmd.AddCommand(SQSClientCmd)
 
 }
 
