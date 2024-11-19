@@ -1,8 +1,16 @@
 package handler
 
+import (
+	"context"
+	"fmt"
+
+	"github.com/dennis-yeom/robin/internal/aws/sqs"
+)
+
 type Handler struct {
 	// handler is struct with 3 pointers to clients.
 	// this is how we bring together all the data.
+	sqs *sqs.SQSClient
 }
 
 type HandlerOptions func(*Handler) error
@@ -21,4 +29,40 @@ func New(opts ...HandlerOptions) (*Handler, error) {
 	println("Successfully created handler instance!")
 
 	return h, nil
+}
+
+// WithSQS is an option to initialize the SQS client in Demo
+func WithSQS(sqsUrl string) HandlerOptions {
+	return func(h *Handler) error {
+		// Use NewSQSClient to initialize SQSClient with the specified queue URL
+		sqsClient, err := sqs.NewSQSClient(context.Background(), sqsUrl)
+		if err != nil {
+			return fmt.Errorf("failed to initialize SQS client: %w", err)
+		}
+		fmt.Println("SQS client successfully initialized and assigned.")
+		h.sqs = sqsClient
+		return nil
+	}
+}
+
+// ReceiveMessage retrieves and processes messages from SQS through the handler
+func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, waitTimeSeconds int32, maxMessages int32) (bool, error) {
+	if h.sqs == nil {
+		return false, fmt.Errorf("SQS client is not initialized")
+	}
+
+	// Call the SQS client's ReceiveMessage function
+	success, err := h.sqs.ReceiveMessage(ctx, visibilityTimeout, waitTimeSeconds, maxMessages)
+
+	if err != nil {
+		return false, fmt.Errorf("handler failed to receive message: %w", err)
+	}
+
+	if success {
+		fmt.Println("Message successfully received and processed via handler.")
+	} else {
+		fmt.Println("No messages received via handler.")
+	}
+
+	return success, nil
 }
