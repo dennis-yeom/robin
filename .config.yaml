@@ -5,3 +5,7 @@ s3:
   bucket: "pcw-test"  
   region: "us-east-1"
   endpoint: "https://us-east-1.linodeobjects.com"
+
+mongo:
+  uri: "mongodb+srv://yeomdennis:<PASSWORD>@bat-computer.e7yar.mongodb.net/?retryWrites=true&w=majority&appName=bat-computer"
+  dbName: "bat-computer"

@@ -6,13 +6,16 @@ import (
 
 	"github.com/dennis-yeom/robin/internal/aws/s3"
 	"github.com/dennis-yeom/robin/internal/aws/sqs"
+	"github.com/dennis-yeom/robin/internal/mongo"
+	"github.com/spf13/viper"
 )
 
 type Handler struct {
 	// handler is struct with 3 pointers to clients.
 	// this is how we bring together all the data.
-	sqs *sqs.SQSClient
-	s3  *s3.S3Client
+	sqs   *sqs.SQSClient
+	s3    *s3.S3Client
+	mongo *mongo.MongoClient
 }
 
 type HandlerOptions func(*Handler) error
@@ -62,6 +65,30 @@ func WithS3(bucket string, endpoint string) HandlerOptions {
 		}
 
 		h.s3 = s3Client
+		return nil
+	}
+}
+
+// WithMongoDB sets up the MongoDB client for the handler using configuration from config.yaml
+func WithMongoDB() HandlerOptions {
+	return func(h *Handler) error {
+		// Retrieve MongoDB configuration from Viper
+		uri := viper.GetString("mongo.uri")
+		dbName := viper.GetString("mongo.dbName")
+
+		// Validate configuration
+		if uri == "" || dbName == "" {
+			return fmt.Errorf("MongoDB configuration is missing in config.yaml")
+		}
+
+		// Initialize the MongoDB client
+		mongoClient, err := mongo.NewMongoClient(context.Background(), uri, dbName)
+		if err != nil {
+			return fmt.Errorf("failed to initialize MongoDB client: %w", err)
+		}
+
+		fmt.Println("MongoDB client successfully initialized")
+		h.mongo = mongoClient
 		return nil
 	}
 }
