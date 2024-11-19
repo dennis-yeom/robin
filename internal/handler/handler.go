@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dennis-yeom/robin/internal/aws/s3"
 	"github.com/dennis-yeom/robin/internal/aws/sqs"
 )
 
@@ -11,6 +12,7 @@ type Handler struct {
 	// handler is struct with 3 pointers to clients.
 	// this is how we bring together all the data.
 	sqs *sqs.SQSClient
+	s3  *s3.S3Client
 }
 
 type HandlerOptions func(*Handler) error
@@ -45,6 +47,25 @@ func WithSQS(sqsUrl string) HandlerOptions {
 	}
 }
 
+// WithS3 sets up the S3 client for the Demo struct
+func WithS3(bucket string, endpoint string) HandlerOptions {
+	return func(h *Handler) error {
+		// Retrieve the endpoint from configuration
+		if endpoint == "" {
+			return fmt.Errorf("endpoint must be set in the config file")
+		}
+
+		// Initialize the S3 client with the bucket and endpoint
+		s3Client, err := s3.NewS3Client(context.TODO(), bucket, endpoint)
+		if err != nil {
+			return fmt.Errorf("failed to initialize S3 client: %v", err)
+		}
+
+		h.s3 = s3Client
+		return nil
+	}
+}
+
 // ReceiveMessage retrieves and processes messages from SQS through the handler
 func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, waitTimeSeconds int32, maxMessages int32) (bool, error) {
 	if h.sqs == nil {
@@ -65,4 +86,21 @@ func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, w
 	}
 
 	return success, nil
+}
+
+// ListObjectVersions prints all objects in the S3 bucket with their version IDs
+func (h *Handler) ListObjectVersions() error {
+	// Retrieve all objects with their version IDs
+	objects, err := h.s3.GetAllObjectVersions(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to list object versions: %w", err)
+	}
+
+	// Print each object's key and version ID
+	fmt.Println("Objects in bucket with their version IDs:")
+	for _, obj := range objects {
+		fmt.Printf(" - Key: %s, Version ID: %s\n", obj.Key, obj.VersionID)
+	}
+
+	return nil
 }
