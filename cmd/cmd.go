@@ -73,6 +73,24 @@ var (
 		},
 	}
 
+	// MongoDB command
+	MongoCmd = &cobra.Command{
+		Use:   "mongo",
+		Short: "initializes the Mongo client",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Create the handler with MongoDB client
+			_, err := handler.New(
+				handler.WithMongoDB(),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to initialize MongoDB client: %w", err)
+			}
+
+			fmt.Println("MongoDB client successfully initialized!")
+			return nil
+		},
+	}
+
 	// GetMsg command
 	GetMsgCmd = &cobra.Command{
 		Use:   "getmsg",
@@ -153,6 +171,7 @@ func init() {
 	RootCmd.AddCommand(GetMsgCmd)
 	RootCmd.AddCommand(S3Cmd)
 	RootCmd.AddCommand(ListCmd)
+	RootCmd.AddCommand(MongoCmd)
 
 }
 

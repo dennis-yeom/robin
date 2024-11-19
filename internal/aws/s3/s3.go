@@ -41,36 +41,6 @@ func NewS3Client(ctx context.Context, bucket, endpoint string) (*S3Client, error
 	}, nil
 }
 
-// // ListFiles lists all files in the S3 bucket and prints their version IDs (if available)
-// func (s *S3Client) ListFiles(ctx context.Context) error {
-// 	input := &s3.ListObjectsV2Input{
-// 		Bucket: aws.String(s.bucket),
-// 	}
-
-// 	result, err := s.client.ListObjectsV2(ctx, input)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to list files: %w", err)
-// 	}
-
-// 	fmt.Println("Files in bucket:", s.bucket)
-// 	for _, item := range result.Contents {
-// 		// Attempt to retrieve the version ID for each object
-// 		versionID, err := s.GetObjectVersion(ctx, *item.Key)
-// 		if err != nil {
-// 			fmt.Printf(" - %s (size: %d) - failed to retrieve version: %v\n", *item.Key, item.Size, err)
-// 			continue
-// 		}
-
-// 		// Print object details, handle missing versionID gracefully
-// 		if versionID == "" {
-// 			fmt.Printf(" - %s (size: %d, no versioning)\n", *item.Key, item.Size)
-// 		} else {
-// 			fmt.Printf(" - %s (size: %d, version: %s)\n", *item.Key, item.Size, versionID)
-// 		}
-// 	}
-// 	return nil
-// }
-
 // GetObjectVersion retrieves the metadata of an object and returns its version ID
 func (s *S3Client) GetObjectVersion(ctx context.Context, key string) (string, error) {
 	input := &s3.HeadObjectInput{
