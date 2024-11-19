@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/dennis-yeom/robin/internal/handler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,6 +19,19 @@ var (
 			fmt.Println("running robin...\n for options: go run main.go --help")
 		},
 	}
+
+	// handler command
+	HandlerCmd = &cobra.Command{
+		Use:   "handler",
+		Short: "creates instance of handler",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := handler.New()
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
 )
 
 func init() {
@@ -29,6 +43,9 @@ func init() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("No configuration file found; using defaults or command-line args: %v", err)
 	}
+
+	// add commands to root cmd
+	RootCmd.AddCommand(HandlerCmd)
 
 }
 
