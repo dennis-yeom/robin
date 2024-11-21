@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dennis-yeom/robin/internal/aws/s3"
 	"github.com/dennis-yeom/robin/internal/aws/sqs"
@@ -166,5 +167,35 @@ func (h *Handler) RedisPing(ctx context.Context) error {
 	}
 
 	fmt.Println("Successfully connected to Redis!")
+	return nil
+}
+
+func (h *Handler) Watch(t int) error {
+	// Create a context for processing
+	ctx := context.Background()
+
+	// Set up a ticker to run every `t` seconds
+	ticker := time.NewTicker(time.Duration(t) * time.Second)
+	// Ensure the ticker is stopped when Watch exits
+	defer ticker.Stop()
+
+	fmt.Println("Starting periodic check on queue...")
+
+	for range ticker.C {
+		fmt.Println("Ticker triggered... checking queue for messages...")
+
+		// Call ReceiveMessage with appropriate parameters
+		success, err := h.ReceiveMessage(ctx, 30, 10, 1) // 30s visibility timeout, 10s wait time, 1 message
+		if err != nil {
+			fmt.Printf("Error while checking messages: %v\n", err)
+			continue
+		}
+
+		if success {
+			fmt.Println("A new file was added and processed from the queue!")
+		} else {
+			fmt.Println("No new files found in the queue.")
+		}
+	}
 	return nil
 }
