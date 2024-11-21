@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	t int
+
 	// root command
 	RootCmd = &cobra.Command{
 		Use:   "robin",
@@ -144,6 +146,32 @@ var (
 		},
 	}
 
+	// WatchCmd calls the Watch function to periodically check the SQS queue
+	WatchCmd = &cobra.Command{
+		Use:   "watch",
+		Short: "Watches the SQS queue periodically and processes new files",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Initialize the handler with necessary clients
+			h, err := handler.New(
+				handler.WithSQS(viper.GetString("sqs.url")),
+				//handler.WithS3(viper.GetString("s3.bucket"), viper.GetString("s3.endpoint")),
+				//handler.WithMongoDB(),
+				//handler.WithRedis(),
+			)
+
+			if err != nil {
+				return fmt.Errorf("failed to initialize handler: %w", err)
+			}
+
+			// Call the Watch function with the interval from the flag
+			if err := h.Watch(t); err != nil {
+				return fmt.Errorf("error in Watch: %w", err)
+			}
+
+			return nil
+		},
+	}
+
 	// lists all files and their versions
 	ListCmd = &cobra.Command{
 		Use:   "list",
@@ -197,6 +225,10 @@ func init() {
 	RootCmd.AddCommand(ListCmd)
 	RootCmd.AddCommand(MongoCmd)
 	RootCmd.AddCommand(RedisCmd)
+	RootCmd.AddCommand(WatchCmd)
+
+	// Flags for TestCmd
+	WatchCmd.PersistentFlags().IntVarP(&t, "time", "t", 5, "number of seconds to wait")
 
 }
 
