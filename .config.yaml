@@ -9,3 +9,6 @@ s3:
 mongo:
   uri: "mongodb+srv://yeomdennis:<PASSWORD>@bat-computer.e7yar.mongodb.net/?retryWrites=true&w=majority&appName=bat-computer"
   dbName: "bat-computer"
+
+redis:
+  port: 6380

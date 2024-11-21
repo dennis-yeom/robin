@@ -7,6 +7,7 @@ import (
 	"github.com/dennis-yeom/robin/internal/aws/s3"
 	"github.com/dennis-yeom/robin/internal/aws/sqs"
 	"github.com/dennis-yeom/robin/internal/mongo"
+	"github.com/dennis-yeom/robin/internal/redis"
 	"github.com/spf13/viper"
 )
 
@@ -16,6 +17,7 @@ type Handler struct {
 	sqs   *sqs.SQSClient
 	s3    *s3.S3Client
 	mongo *mongo.MongoClient
+	redis *redis.RedisClient
 }
 
 type HandlerOptions func(*Handler) error
@@ -93,6 +95,26 @@ func WithMongoDB() HandlerOptions {
 	}
 }
 
+// WithRedis sets up the Redis client for the handler without testing the connection
+func WithRedis() HandlerOptions {
+	return func(h *Handler) error {
+		// Retrieve the Redis port from Viper configuration
+		port := viper.GetInt("redis.port")
+		if port == 0 {
+			return fmt.Errorf("redis port is not set or invalid in config.yaml")
+		}
+
+		// Initialize the Redis client
+		redisClient := redis.New(port)
+
+		// Assign the Redis client to the handler
+		h.redis = redisClient
+
+		fmt.Printf("Redis client created on port %d\n", port)
+		return nil
+	}
+}
+
 // ReceiveMessage retrieves and processes messages from SQS through the handler
 func (h *Handler) ReceiveMessage(ctx context.Context, visibilityTimeout int32, waitTimeSeconds int32, maxMessages int32) (bool, error) {
 	if h.sqs == nil {
@@ -129,5 +151,20 @@ func (h *Handler) ListObjectVersions() error {
 		fmt.Printf(" - Key: %s, Version ID: %s\n", obj.Key, obj.VersionID)
 	}
 
+	return nil
+}
+
+// RedisPing tests the connection to Redis using the Ping function
+func (h *Handler) RedisPing(ctx context.Context) error {
+	if h.redis == nil {
+		return fmt.Errorf("Redis client is not initialized")
+	}
+
+	// Call the Ping function from the Redis client
+	if err := h.redis.Ping(ctx); err != nil {
+		return fmt.Errorf("failed to connect to Redis: %w", err)
+	}
+
+	fmt.Println("Successfully connected to Redis!")
 	return nil
 }
