@@ -91,6 +91,30 @@ var (
 		},
 	}
 
+	// Redis command
+	RedisCmd = &cobra.Command{
+		Use:   "redis",
+		Short: "initializes the Redis client and checks connection",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Initialize the handler with Redis client
+			h, err := handler.New(
+				handler.WithRedis(),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to initialize Redis client: %w", err)
+			}
+
+			// Test the Redis connection using RedisPing
+			if err := h.RedisPing(context.Background()); err != nil {
+				return fmt.Errorf("failed to connect to Redis: %w", err)
+			}
+
+			// Print success message if Ping is successful
+			fmt.Println("Redis server is up and connection is successful!")
+			return nil
+		},
+	}
+
 	// GetMsg command
 	GetMsgCmd = &cobra.Command{
 		Use:   "getmsg",
@@ -172,6 +196,7 @@ func init() {
 	RootCmd.AddCommand(S3Cmd)
 	RootCmd.AddCommand(ListCmd)
 	RootCmd.AddCommand(MongoCmd)
+	RootCmd.AddCommand(RedisCmd)
 
 }
 
